@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Activity Logs — Legacy Hub CRM{% endblock %}
+{% block nav_links %}
+<a href="/superadmin/" class="nav-link">Admins</a>
+<a href="/superadmin/logs" class="nav-link active">Activity Logs</a>
+{% endblock %}
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <h1 class="font-cinzel" style="font-size:22px;color:#C9A84C;">Activity Logs</h1>
+    <p style="font-size:13px;color:#555;margin-top:2px;">{{ total }} total log entries</p>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="table-dark">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Actor</th>
+                    <th>Role</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Detail</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="color:#666;font-size:11px;white-space:nowrap;">{{ log.created_at.strftime('%d %b %Y %H:%M') if log.created_at else '—' }}</td>
+                    <td style="color:#E5E5E5;">{{ log.actor_name or 'System' }}</td>
+                    <td>
+                        {% if log.actor_role == 'superadmin' %}<span class="badge badge-gold">Super Admin</span>
+                        {% elif log.actor_role == 'admin' %}<span class="badge" style="background:#1A2A1A;color:#4ade80;border:1px solid #4ade8033;">Admin</span>
+                        {% elif log.actor_role == 'sales' %}<span class="badge" style="background:#1A1A2A;color:#818cf8;border:1px solid #818cf833;">Sales</span>
+                        {% else %}<span class="badge badge-gray">System</span>{% endif %}
+                    </td>
+                    <td><span style="color:#C9A84C;font-size:12px;">{{ log.action }}</span></td>
+                    <td style="color:#666;font-size:12px;">{{ log.entity or '—' }} {% if log.entity_id %}#{{ log.entity_id }}{% endif %}</td>
+                    <td style="color:#555;font-size:12px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ log.detail or '' }}">{{ log.detail or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="text-align:center;color:#555;padding:2rem;">No activity logs yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if total_pages > 1 %}
+    <div style="padding:12px 16px;border-top:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:#555;">Page {{ page }} of {{ total_pages }}</span>
+        <div class="pagination">
+            <a href="?page={{ page-1 }}" class="page-btn {% if page <= 1 %}disabled{% endif %}">&#8592;</a>
+            {% for p in range([1, page-2]|max, [total_pages+1, page+3]|min) %}
+            <a href="?page={{ p }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+            {% endfor %}
+            <a href="?page={{ page+1 }}" class="page-btn {% if page >= total_pages %}disabled{% endif %}">&#8594;</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

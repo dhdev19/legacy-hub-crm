@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Projects — Legacy Hub CRM{% endblock %}
+{% block nav_links %}
+<a href="/admin/" class="nav-link">Queries</a>
+<a href="/admin/projects" class="nav-link active">Projects</a>
+<a href="/admin/sales" class="nav-link">Sales Persons</a>
+<a href="/admin/sources" class="nav-link">Sources</a>
+<a href="/admin/statuses" class="nav-link">Statuses</a>
+{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+    <div>
+        <h1 class="font-cinzel" style="font-size:20px;color:#C9A84C;">Projects</h1>
+        <p style="font-size:12px;color:#555;margin-top:2px;">{{ project_data|length }} active projects</p>
+    </div>
+    <button onclick="document.getElementById('addProjectModal').style.display='flex'" class="btn-gold">+ Add Project</button>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1rem;">
+    {% for item in project_data %}
+    <div class="card card-gold" style="padding:1.25rem;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+            <div>
+                <div class="font-cinzel" style="font-size:15px;color:#C9A84C;">{{ item.project.name }}</div>
+                <div style="font-size:11px;color:#555;margin-top:4px;">{{ item.query_count }} queries</div>
+            </div>
+            <div style="display:flex;gap:6px;">
+                <button onclick="openEditProject({{ item.project.id }}, '{{ item.project.name | replace("'","\\'")}}')" class="btn-outline btn-sm">Edit</button>
+                <button onclick="openDeleteProject({{ item.project.id }}, '{{ item.project.name | replace("'","\\'")}}')" class="btn-danger btn-sm">Delete</button>
+            </div>
+        </div>
+
+        <!-- Webhook URL -->
+        <div style="background:#0A0A0A;border-radius:6px;padding:8px 10px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:10px;color:#555;font-family:monospace;">/webhook/{{ item.project.nanoid }}/query</span>
+            <button onclick="copyText('{{ request.url.scheme }}://{{ request.url.netloc }}/webhook/{{ item.project.nanoid }}/query')" class="copy-btn">Copy</button>
+        </div>
+
+        <!-- Sales Persons on project -->
+        <div style="margin-bottom:12px;">
+            <div style="font-size:11px;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Sales Persons</div>
+            {% if item.sales %}
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                {% for sp in item.sales %}
+                <div style="display:flex;align-items:center;gap:4px;background:#0A0A0A;border:1px solid #2A2A2A;border-radius:5px;padding:4px 8px;">
+                    <span style="font-size:12px;color:#aaa;">{{ sp.name }}</span>
+                    <form method="post" action="/admin/projects/{{ item.project.id }}/remove-sales/{{ sp.id }}" style="display:inline;">
+                        <button type="submit" style="background:none;border:none;color:#555;cursor:pointer;font-size:13px;line-height:1;padding:0 2px;" title="Remove">×</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <span style="font-size:12px;color:#444;">No sales persons assigned</span>
+            {% endif %}
+        </div>
+
+        <!-- Add sales person to project -->
+        <form method="post" action="/admin/projects/{{ item.project.id }}/add-sales" style="display:flex;gap:6px;">
+            <select name="user_id" class="input-dark" style="flex:1;">
+                <option value="">Add sales person...</option>
+                {% for sp in all_sales %}
+                {% if sp not in item.sales %}
+                <option value="{{ sp.id }}">{{ sp.name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-gold" style="white-space:nowrap;">Add</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="card" style="padding:2rem;text-align:center;color:#555;grid-column:1/-1;">No projects yet. Create one above.</div>
+    {% endfor %}
+</div>
+
+<!-- Add Project Modal -->
+<div id="addProjectModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-title">New Project</div>
+        <form method="post" action="/admin/projects/add">
+            <div style="margin-bottom:16px;"><label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Project Name</label><input type="text" name="name" class="input-dark" placeholder="e.g. Luxury Villas Phase 2" required></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('addProjectModal').style.display='none'" class="btn-outline">Cancel</button>
+                <button type="submit" class="btn-gold">Create Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div id="editProjectModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-title">Edit Project</div>
+        <form method="post" id="editProjectForm">
+            <div style="margin-bottom:16px;"><label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Project Name</label><input type="text" name="name" id="editProjectName" class="input-dark" required></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('editProjectModal').style.display='none'" class="btn-outline">Cancel</button>
+                <button type="submit" class="btn-gold">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Project Modal -->
+<div id="deleteProjectModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-title" style="color:#ef4444;">Delete Project</div>
+        <p id="deleteProjectMsg" style="color:#aaa;font-size:14px;margin-bottom:1.5rem;"></p>
+        <form method="post" id="deleteProjectForm">
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('deleteProjectModal').style.display='none'" class="btn-outline">Cancel</button>
+                <button type="submit" class="btn-danger">Delete Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function openEditProject(id, name) {
+    document.getElementById('editProjectName').value = name;
+    document.getElementById('editProjectForm').action = '/admin/projects/edit/' + id;
+    document.getElementById('editProjectModal').style.display = 'flex';
+}
+function openDeleteProject(id, name) {
+    document.getElementById('deleteProjectMsg').textContent = 'Delete project "' + name + '"? All queries will be moved to Admin Queue and sales persons will be detached.';
+    document.getElementById('deleteProjectForm').action = '/admin/projects/delete/' + id;
+    document.getElementById('deleteProjectModal').style.display = 'flex';
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
+});
+</script>
+{% endblock %}

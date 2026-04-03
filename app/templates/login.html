@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Legacy Hub CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0A0A0A; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
+        .login-card { background: #141414; border: 1px solid #2A2A2A; border-top: 2px solid #C9A84C; border-radius: 14px; padding: 2.5rem; width: 100%; max-width: 400px; }
+        .logo-wrap { text-align: center; margin-bottom: 2rem; }
+        .logo-icon { width: 60px; height: 60px; background: #141414; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-family: 'Cinzel', serif; font-size: 22px; font-weight: 600; color: #0A0A0A; }
+        .logo-title { font-family: 'Cinzel', serif; font-size: 20px; color: #C9A84C; letter-spacing: 0.05em; }
+        .logo-sub { font-size: 12px; color: #555; margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase; }
+        .form-label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+        .form-input { background: #0A0A0A; border: 1px solid #2A2A2A; color: #E5E5E5; border-radius: 8px; padding: 10px 14px; font-size: 14px; width: 100%; outline: none; transition: border 0.2s; }
+        .form-input:focus { border-color: #C9A84C55; }
+        .form-input::placeholder { color: #444; }
+        .btn-login { width: 100%; background: #C9A84C; color: #0A0A0A; font-weight: 600; font-size: 14px; padding: 11px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 0.05em; transition: background 0.2s; margin-top: 8px; }
+        .btn-login:hover { background: #E8C97A; }
+        .error-box { background: #ef444411; border: 1px solid #ef444433; color: #ef4444; border-radius: 7px; padding: 10px 14px; font-size: 13px; margin-bottom: 1rem; text-align: center; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0A0A0A; } ::-webkit-scrollbar-thumb { background: #2A2A2A; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-wrap">
+            <div class="logo-icon"><img src="/static/images/logo.png" alt="Legacy Hub"></div>
+            <div class="logo-title">Legacy Hub</div>
+            <div class="logo-sub">CRM Platform</div>
+        </div>
+        {% if error %}
+        <div class="error-box">{{ error }}</div>
+        {% endif %}
+        <form method="post" action="/login">
+            <div style="margin-bottom:16px;">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-input" placeholder="Enter your username" required autocomplete="username">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-login">Sign In</button>
+        </form>
+        <div style="text-align:center;margin-top:1.5rem;font-size:11px;color:#333;">Legacy Hub CRM &copy; 2024</div>
+    </div>
+</body>
+</html>

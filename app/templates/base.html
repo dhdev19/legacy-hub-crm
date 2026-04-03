@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Legacy Hub CRM{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #C9A84C;
+            --gold-light: #E8C97A;
+            --gold-dark: #A07830;
+            --gold-muted: #C9A84C22;
+            --black: #0A0A0A;
+            --black-soft: #141414;
+            --black-card: #1A1A1A;
+            --black-border: #2A2A2A;
+            --text-muted: #888888;
+        }
+        * { font-family: 'Inter', sans-serif; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        body { background: #0A0A0A; color: #E5E5E5; min-height: 100vh; }
+
+        /* Navbar */
+        .navbar { background: #141414; border-bottom: 1px solid #C9A84C33; height: 56px; display: flex; align-items: center; padding: 0 1.5rem; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .navbar-brand { display: flex; align-items: center; gap: 10px; }
+        .navbar-logo { width: 36px; height: 36px; background: linear-gradient(135deg, #C9A84C, #A07830); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 600; color: #0A0A0A; }
+        .navbar-title { font-family: 'Cinzel', serif; font-size: 16px; color: #C9A84C; letter-spacing: 0.05em; }
+        .navbar-links { display: flex; align-items: center; gap: 4px; }
+        .nav-link { color: #888; font-size: 13px; padding: 6px 14px; border-radius: 6px; text-decoration: none; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { color: #C9A84C; background: #C9A84C11; }
+        .nav-logout { color: #C9A84C; font-size: 13px; padding: 5px 14px; border-radius: 6px; border: 1px solid #C9A84C44; text-decoration: none; transition: all 0.2s; }
+        .nav-logout:hover { background: #C9A84C22; }
+
+        /* Cards */
+        .card { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 10px; }
+        .card-gold { border-top: 2px solid #C9A84C; }
+
+        /* Buttons */
+        .btn-gold { background: #C9A84C; color: #0A0A0A; font-weight: 600; font-size: 13px; padding: 7px 18px; border-radius: 7px; border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+        .btn-gold:hover { background: #E8C97A; }
+        .btn-outline { background: transparent; color: #C9A84C; font-size: 13px; padding: 6px 14px; border-radius: 7px; border: 1px solid #C9A84C44; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+        .btn-outline:hover { background: #C9A84C22; }
+        .btn-danger { background: transparent; color: #ef4444; font-size: 13px; padding: 6px 14px; border-radius: 7px; border: 1px solid #ef444433; cursor: pointer; transition: all 0.2s; }
+        .btn-danger:hover { background: #ef444411; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+        /* Inputs */
+        .input-dark { background: #0A0A0A; border: 1px solid #2A2A2A; color: #E5E5E5; border-radius: 7px; padding: 8px 12px; font-size: 13px; width: 100%; transition: border 0.2s; outline: none; }
+        .input-dark:focus { border-color: #C9A84C55; }
+        .input-dark::placeholder { color: #555; }
+        select.input-dark option { background: #1A1A1A; }
+
+        /* Table */
+        .table-dark { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .table-dark th { background: #141414; color: #888; font-weight: 500; padding: 10px 14px; text-align: left; border-bottom: 1px solid #2A2A2A; white-space: nowrap; }
+        .table-dark td { padding: 10px 14px; border-bottom: 1px solid #1F1F1F; vertical-align: top; }
+        .table-dark tr:hover td { background: #1F1F1F; }
+        .table-dark tr:last-child td { border-bottom: none; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 2px 9px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+        .badge-gold { background: #C9A84C22; color: #C9A84C; border: 1px solid #C9A84C33; }
+        .badge-gray { background: #2A2A2A; color: #888; }
+
+        /* Status dropdown */
+        .status-select { background: #0A0A0A; border: 1px solid #C9A84C33; color: #C9A84C; border-radius: 5px; padding: 3px 8px; font-size: 12px; cursor: pointer; outline: none; }
+        .status-select:focus { border-color: #C9A84C77; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-box { background: #1A1A1A; border: 1px solid #2A2A2A; border-top: 2px solid #C9A84C; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 480px; }
+        .modal-title { font-family: 'Cinzel', serif; color: #C9A84C; font-size: 16px; margin-bottom: 1rem; }
+
+        /* Pagination */
+        .pagination { display: flex; gap: 4px; align-items: center; }
+        .page-btn { background: #1A1A1A; border: 1px solid #2A2A2A; color: #888; border-radius: 5px; padding: 5px 11px; font-size: 12px; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+        .page-btn:hover { border-color: #C9A84C44; color: #C9A84C; }
+        .page-btn.active { background: #C9A84C; color: #0A0A0A; border-color: #C9A84C; font-weight: 600; }
+        .page-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+        /* Stat cards */
+        .stat-card { background: #1A1A1A; border: 1px solid #2A2A2A; border-top: 2px solid #C9A84C; border-radius: 9px; padding: 1rem; }
+        .stat-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+        .stat-value { font-size: 26px; font-weight: 600; color: #C9A84C; font-family: 'Cinzel', serif; }
+
+        /* Section header */
+        .section-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #2A2A2A; }
+        .section-title { font-family: 'Cinzel', serif; color: #C9A84C; font-size: 14px; }
+
+        /* Follow up expand row */
+        .fu-expand { background: #111; border-top: 1px solid #2A2A2A; }
+        .fu-item { padding: 8px 14px; border-bottom: 1px solid #1F1F1F; font-size: 12px; }
+
+        /* Alert */
+        .alert-error { background: #ef444411; border: 1px solid #ef444433; color: #ef4444; border-radius: 7px; padding: 10px 14px; font-size: 13px; margin-bottom: 1rem; }
+        .alert-success { background: #22c55e11; border: 1px solid #22c55e33; color: #22c55e; border-radius: 7px; padding: 10px 14px; font-size: 13px; margin-bottom: 1rem; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #0A0A0A; }
+        ::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #C9A84C44; }
+
+        /* Table overflow */
+        .table-wrap { overflow-x: auto; }
+
+        /* Admin queue highlight */
+        .queue-row td { background: #1A1500 !important; }
+        .queue-row:hover td { background: #221C00 !important; }
+
+        /* Tooltip */
+        .copy-btn { background: none; border: none; cursor: pointer; color: #555; font-size: 11px; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; }
+        .copy-btn:hover { color: #C9A84C; background: #C9A84C11; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if user %}
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="navbar-logo">LH</div>
+            <span class="navbar-title">Legacy Hub CRM</span>
+        </div>
+        <div class="navbar-links">
+            {% block nav_links %}{% endblock %}
+            <span style="color:#555;font-size:12px;margin:0 8px;">{{ user.name }}</span>
+            <a href="/logout" class="nav-logout">Logout</a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div style="padding: 1.5rem; max-width: 1600px; margin: 0 auto;">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Global Follow-up Modal -->
+    <div id="fuModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-title">Add Follow-Up</div>
+            <form method="post" id="fuForm">
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Remark</label>
+                    <textarea name="remark" class="input-dark" rows="3" placeholder="Enter follow-up remark..." required></textarea>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Follow-up Date & Time</label>
+                    <input type="datetime-local" name="follow_up_dt" class="input-dark" required>
+                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button type="button" onclick="closeFuModal()" class="btn-outline">Cancel</button>
+                    <button type="submit" class="btn-gold">Save Follow-Up</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openFuModal(queryId, baseUrl) {
+            document.getElementById('fuForm').action = baseUrl + '/followup/add/' + queryId;
+            document.getElementById('fuModal').style.display = 'flex';
+        }
+        function closeFuModal() {
+            document.getElementById('fuModal').style.display = 'none';
+        }
+        function toggleFollowups(rowId) {
+            const el = document.getElementById('fu-' + rowId);
+            if (el) el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+        }
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.createElement('div');
+                toast.textContent = 'Copied!';
+                toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#C9A84C;color:#0A0A0A;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;z-index:9999;';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+            });
+        }
+        document.getElementById('fuModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFuModal();
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

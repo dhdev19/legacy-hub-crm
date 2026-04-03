@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Add Query — Legacy Hub CRM{% endblock %}
+{% block nav_links %}
+<a href="/sales/" class="nav-link">Queries</a>
+<a href="/sales/add-query" class="nav-link active">Add Query</a>
+<a href="/sales/projects" class="nav-link">My Projects</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:620px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+        <a href="/sales/" class="btn-outline btn-sm">← Back</a>
+        <h1 class="font-cinzel" style="font-size:20px;color:#C9A84C;">Add New Query</h1>
+    </div>
+    <div class="card" style="padding:1.5rem;">
+        <form method="post" action="/sales/add-query">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                <div style="grid-column:1/-1;">
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Query Name *</label>
+                    <input type="text" name="query_name" class="input-dark" placeholder="Query title or identifier" required>
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Client Name</label>
+                    <input type="text" name="client_name" class="input-dark" placeholder="NA">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Phone</label>
+                    <input type="text" name="phone" class="input-dark" placeholder="NA">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Email</label>
+                    <input type="email" name="email" class="input-dark" placeholder="NA">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Project</label>
+                    <select name="project_id" class="input-dark">
+                        <option value="">— No Project —</option>
+                        {% for p in projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Source</label>
+                    <select name="source_id" class="input-dark">
+                        <option value="">— Select Source —</option>
+                        {% for s in sources %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Status</label>
+                    <select name="status_id" class="input-dark">
+                        <option value="">— Select Status —</option>
+                        {% for s in statuses %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid #2A2A2A;">
+                <a href="/sales/" class="btn-outline">Cancel</a>
+                <button type="submit" class="btn-gold">Create Query</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

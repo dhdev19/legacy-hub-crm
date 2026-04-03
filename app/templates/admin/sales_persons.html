@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Sales Persons — Legacy Hub CRM{% endblock %}
+{% block nav_links %}
+<a href="/admin/" class="nav-link">Queries</a>
+<a href="/admin/projects" class="nav-link">Projects</a>
+<a href="/admin/sales" class="nav-link active">Sales Persons</a>
+<a href="/admin/sources" class="nav-link">Sources</a>
+<a href="/admin/statuses" class="nav-link">Statuses</a>
+{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+    <div>
+        <h1 class="font-cinzel" style="font-size:20px;color:#C9A84C;">Sales Persons</h1>
+        <p style="font-size:12px;color:#555;margin-top:2px;">{{ sales_data|length }} total</p>
+    </div>
+    <button onclick="document.getElementById('addSalesModal').style.display='flex'" class="btn-gold">+ Add Sales Person</button>
+</div>
+
+{% if request.query_params.get('error') %}
+<div class="alert-error">{{ request.query_params.get('error') }}</div>
+{% endif %}
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="table-dark">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Projects</th>
+                    <th>Queries</th>
+                    <th>Joined</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sales_data %}
+                <tr>
+                    <td style="color:#555;">{{ loop.index }}</td>
+                    <td style="color:#E5E5E5;font-weight:500;">{{ item.user.name }}</td>
+                    <td><span class="badge badge-gold">{{ item.user.username }}</span></td>
+                    <td><span style="color:#C9A84C;font-weight:600;">{{ item.project_count }}</span></td>
+                    <td><span style="color:#aaa;">{{ item.query_count }}</span></td>
+                    <td style="color:#555;font-size:12px;">{{ item.user.created_at.strftime('%d %b %Y') if item.user.created_at else '—' }}</td>
+                    <td style="text-align:right;">
+                        <button onclick="openEditSales({{ item.user.id }}, '{{ item.user.name }}', '{{ item.user.username }}')" class="btn-outline btn-sm">Edit</button>
+                        <button onclick="openDeleteSales({{ item.user.id }}, '{{ item.user.name }}', {{ item.query_count }})" class="btn-danger btn-sm" style="margin-left:4px;">Delete</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="text-align:center;color:#555;padding:2rem;">No sales persons yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Sales Modal -->
+<div id="addSalesModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-title">Add Sales Person</div>
+        <form method="post" action="/admin/sales/add">
+            <div style="margin-bottom:12px;"><label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Full Name</label><input type="text" name="name" class="input-dark" required></div>
+            <div style="margin-bottom:12px;"><label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Username</label><input type="text" name="username" class="input-dark" required></div>
+            <div style="margin-bottom:16px;"><label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Password</label><input type="password" name="password" class="input-dark" required></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('addSalesModal').style.display='none'" class="btn-outline">Cancel</button>
+                <button type="submit" class="btn-gold">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Sales Modal -->
+<div id="editSalesModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-title">Edit Sales Person</div>
+        <form method="post" id="editSalesForm">
+            <div style="margin-bottom:12px;"><label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Full Name</label><input type="text" name="name" id="editSalesName" class="input-dark" required></div>
+            <div style="margin-bottom:16px;"><label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">New Password <span style="color:#555;">(optional)</span></label><input type="password" name="password" class="input-dark" placeholder="Leave blank to keep"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('editSalesModal').style.display='none'" class="btn-outline">Cancel</button>
+                <button type="submit" class="btn-gold">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Sales Modal -->
+<div id="deleteSalesModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-title" style="color:#ef4444;">Delete Sales Person</div>
+        <p id="deleteSalesMsg" style="color:#aaa;font-size:14px;margin-bottom:1rem;"></p>
+        <form method="post" id="deleteSalesForm">
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px;color:#888;display:block;margin-bottom:8px;">What should happen to their queries?</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px;background:#0A0A0A;border-radius:7px;border:1px solid #2A2A2A;margin-bottom:8px;">
+                    <input type="radio" name="action" value="transfer" checked style="accent-color:#C9A84C;">
+                    <span style="font-size:13px;color:#aaa;">Move to Admin Queue</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px;background:#0A0A0A;border-radius:7px;border:1px solid #ef444422;">
+                    <input type="radio" name="action" value="delete" style="accent-color:#ef4444;">
+                    <span style="font-size:13px;color:#ef4444;">Delete all queries</span>
+                </label>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('deleteSalesModal').style.display='none'" class="btn-outline">Cancel</button>
+                <button type="submit" class="btn-danger">Confirm Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function openEditSales(id, name) {
+    document.getElementById('editSalesName').value = name;
+    document.getElementById('editSalesForm').action = '/admin/sales/edit/' + id;
+    document.getElementById('editSalesModal').style.display = 'flex';
+}
+function openDeleteSales(id, name, count) {
+    document.getElementById('deleteSalesMsg').textContent = 'Delete "' + name + '"? They have ' + count + ' active quer' + (count === 1 ? 'y' : 'ies') + '.';
+    document.getElementById('deleteSalesForm').action = '/admin/sales/delete/' + id;
+    document.getElementById('deleteSalesModal').style.display = 'flex';
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
+});
+</script>
+{% endblock %}

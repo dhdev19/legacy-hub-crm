@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Edit Query — Legacy Hub CRM{% endblock %}
+{% block nav_links %}
+<a href="/admin/" class="nav-link">Queries</a>
+<a href="/admin/projects" class="nav-link">Projects</a>
+<a href="/admin/sales" class="nav-link">Sales Persons</a>
+<a href="/admin/sources" class="nav-link">Sources</a>
+<a href="/admin/statuses" class="nav-link">Statuses</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:680px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+        <a href="/admin/" class="btn-outline btn-sm">← Back</a>
+        <h1 class="font-cinzel" style="font-size:20px;color:#C9A84C;">Edit Query</h1>
+    </div>
+    <div class="card" style="padding:1.5rem;">
+        <form method="post" action="/admin/query/edit/{{ query.id }}">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                <div style="grid-column:1/-1;">
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Query Name *</label>
+                    <input type="text" name="query_name" class="input-dark" value="{{ query.query_name }}" required>
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Client Name</label>
+                    <input type="text" name="client_name" class="input-dark" value="{{ query.client_name }}">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Phone</label>
+                    <input type="text" name="phone" class="input-dark" value="{{ query.phone }}">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Email</label>
+                    <input type="email" name="email" class="input-dark" value="{{ query.email }}">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Source</label>
+                    <select name="source_id" class="input-dark">
+                        <option value="">— No Source —</option>
+                        {% for s in sources %}<option value="{{ s.id }}" {% if query.source_id == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Project</label>
+                    <select name="project_id" class="input-dark" id="projectSelect" onchange="loadSalesForProject(this.value, {{ query.assigned_to or 'null' }})">
+                        <option value="">— Admin Queue —</option>
+                        {% for p in projects %}<option value="{{ p.id }}" {% if query.project_id == p.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Assigned To</label>
+                    <select name="assigned_to" class="input-dark" id="salesSelect">
+                        <option value="">— Admin Queue —</option>
+                        {% for s in all_sales %}<option value="{{ s.id }}" {% if query.assigned_to == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:5px;">Status</label>
+                    <select name="status_id" class="input-dark">
+                        <option value="">— No Status —</option>
+                        {% for s in statuses %}<option value="{{ s.id }}" {% if query.status_id == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid #2A2A2A;">
+                <a href="/admin/" class="btn-outline">Cancel</a>
+                <button type="submit" class="btn-gold">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function loadSalesForProject(projectId, currentAssigned) {
+    const sel = document.getElementById('salesSelect');
+    if (!projectId) { sel.innerHTML = '<option value="">— Admin Queue —</option>'; return; }
+    fetch('/admin/query/sales-for-project/' + projectId)
+        .then(r => r.json())
+        .then(data => {
+            sel.innerHTML = '<option value="">— Select Sales Person —</option>';
+            data.forEach(sp => {
+                const selected = (sp.id == currentAssigned) ? 'selected' : '';
+                sel.innerHTML += '<option value="' + sp.id + '" ' + selected + '>' + sp.name + '</option>';
+            });
+        });
+}
+</script>
+{% endblock %}

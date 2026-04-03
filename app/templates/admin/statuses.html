@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Statuses — Legacy Hub CRM{% endblock %}
+{% block nav_links %}
+<a href="/admin/" class="nav-link">Queries</a>
+<a href="/admin/projects" class="nav-link">Projects</a>
+<a href="/admin/sales" class="nav-link">Sales Persons</a>
+<a href="/admin/sources" class="nav-link">Sources</a>
+<a href="/admin/statuses" class="nav-link active">Statuses</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:560px;">
+    <h1 class="font-cinzel" style="font-size:20px;color:#C9A84C;margin-bottom:1.5rem;">Query Statuses</h1>
+    <div class="card" style="padding:1.25rem;margin-bottom:1rem;">
+        <form method="post" action="/admin/statuses/add" style="display:flex;gap:8px;">
+            <input type="text" name="name" class="input-dark" placeholder="Add new status (e.g. Site Visit Done)" required>
+            <button type="submit" class="btn-gold" style="white-space:nowrap;">Add Status</button>
+        </form>
+    </div>
+    <div class="card">
+        <div class="section-header"><span class="section-title">Active Statuses</span></div>
+        {% for s in statuses %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #1F1F1F;">
+            <span style="color:#aaa;font-size:13px;">{{ s.name }}</span>
+            <form method="post" action="/admin/statuses/delete/{{ s.id }}">
+                <button type="submit" class="btn-danger btn-sm">Remove</button>
+            </form>
+        </div>
+        {% else %}
+        <div style="padding:1.5rem;text-align:center;color:#555;">No statuses yet.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

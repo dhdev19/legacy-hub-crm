@@ -58,7 +58,7 @@
 
         <!-- Add sales person to project -->
         <form method="post" action="/admin/projects/{{ item.project.id }}/add-sales" style="display:flex;gap:6px;">
-            <select name="user_id" class="input-dark" style="flex:1;">
+            <select name="user_id" class="input-dark" style="flex:1;" onchange="toggleAddButton(this, {{ item.project.id }})">
                 <option value="">Add sales person...</option>
                 {% for sp in all_sales %}
                 {% if sp not in item.sales %}
@@ -66,8 +66,30 @@
                 {% endif %}
                 {% endfor %}
             </select>
-            <button type="submit" class="btn-gold" style="white-space:nowrap;">Add</button>
+            <button type="submit" class="btn-gold" style="white-space:nowrap;" id="addBtn-{{ item.project.id }}" disabled>Add</button>
         </form>
+
+<script>
+function toggleAddButton(select, projectId) {
+    const button = document.getElementById('addBtn-' + projectId);
+    if (select.value) {
+        button.disabled = false;
+        button.style.opacity = '1';
+    } else {
+        button.disabled = true;
+        button.style.opacity = '0.5';
+    }
+}
+
+// Initialize buttons on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('select[name="user_id"]');
+    selects.forEach(select => {
+        const projectId = select.id.replace('select-', '');
+        toggleAddButton(select, projectId);
+    });
+});
+</script>
     </div>
     {% else %}
     <div class="card" style="padding:2rem;text-align:center;color:#555;grid-column:1/-1;">No projects yet. Create one above.</div>

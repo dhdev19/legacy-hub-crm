@@ -34,11 +34,16 @@ async def webhook_99acres(request: Request, db: Session = Depends(get_db)):
         # Get JSON data
         data = await request.json()
         
-        # Process the data
-        success, message = process_99acres_data(data, db)
+        # Save webhook data first to get the ID
+        webhook_entry = save_webhook_data("99acres", data, False, "Processing...", db)
         
-        # Save webhook data
-        save_webhook_data("99acres", data, success, message if not success else None, db)
+        # Process the data with webhook_id
+        success, message = process_99acres_data(data, db, webhook_entry.id)
+        
+        # Update webhook entry with processing result
+        webhook_entry.is_processed = success
+        webhook_entry.error_message = None if success else message
+        db.commit()
         
         if success:
             return JSONResponse(
@@ -79,11 +84,16 @@ async def webhook_magicbricks(request: Request, db: Session = Depends(get_db)):
         # Get JSON data
         data = await request.json()
         
-        # Process the data
-        success, message = process_magicbricks_data(data, db)
+        # Save webhook data first to get the ID
+        webhook_entry = save_webhook_data("magicbricks", data, False, "Processing...", db)
         
-        # Save webhook data
-        save_webhook_data("magicbricks", data, success, message if not success else None, db)
+        # Process the data with webhook_id
+        success, message = process_magicbricks_data(data, db, webhook_entry.id)
+        
+        # Update webhook entry with processing result
+        webhook_entry.is_processed = success
+        webhook_entry.error_message = None if success else message
+        db.commit()
         
         if success:
             return JSONResponse(

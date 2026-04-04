@@ -89,7 +89,7 @@ def get_min_query_sales_person_for_project(db: Session, project_id: int) -> int:
 
     return min_user_id
 
-def process_99acres_data(data: dict, db: Session) -> tuple[bool, str]:
+def process_99acres_data(data: dict, db: Session, webhook_id: int = None) -> tuple[bool, str]:
     """Process 99acres webhook data and create query if valid"""
     try:
         # Validate required fields
@@ -124,7 +124,8 @@ def process_99acres_data(data: dict, db: Session) -> tuple[bool, str]:
             project_id=project_id,
             source_id=source.id,
             status_id=None,  # Will use default status
-            assigned_to=assigned_to
+            assigned_to=assigned_to,
+            webhook_id=webhook_id
         )
         
         db.add(query)
@@ -137,7 +138,7 @@ def process_99acres_data(data: dict, db: Session) -> tuple[bool, str]:
         db.rollback()
         return False, f"Error processing data: {str(e)}"
 
-def process_magicbricks_data(data: dict, db: Session) -> tuple[bool, str]:
+def process_magicbricks_data(data: dict, db: Session, webhook_id: int = None) -> tuple[bool, str]:
     """Process MagicBricks webhook data and create query if valid"""
     try:
         # Validate required fields
@@ -172,7 +173,8 @@ def process_magicbricks_data(data: dict, db: Session) -> tuple[bool, str]:
             project_id=project_id,
             source_id=source.id,
             status_id=None,  # Will use default status
-            assigned_to=assigned_to
+            assigned_to=assigned_to,
+            webhook_id=webhook_id
         )
         
         db.add(query)
@@ -195,3 +197,5 @@ def save_webhook_data(source: str, data: dict, is_processed: bool, error_message
     )
     db.add(webhook_entry)
     db.commit()
+    db.refresh(webhook_entry)
+    return webhook_entry

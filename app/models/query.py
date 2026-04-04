@@ -15,6 +15,7 @@ class Query(Base):
     source_id = Column(Integer, ForeignKey("sources.id"), nullable=True)
     status_id = Column(Integer, ForeignKey("statuses.id"), nullable=True)
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
+    webhook_id = Column(Integer, ForeignKey("webhook_data.id"), nullable=True)
     is_deleted = Column(Integer, default=0)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -23,4 +24,5 @@ class Query(Base):
     source = relationship("Source")
     status = relationship("Status")
     assigned_user = relationship("User", back_populates="assigned_queries", foreign_keys=[assigned_to])
+    webhook = relationship("WebhookData")
     followups = relationship("FollowUp", back_populates="query", order_by="FollowUp.follow_up_dt")

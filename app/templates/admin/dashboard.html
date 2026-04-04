@@ -40,9 +40,10 @@
                 <tr>
                     <th style="min-width:130px;">Date & Time</th>
                     <th style="min-width:180px;">Client</th>
-                    <th>Project</th>
+                    <th>Sales Person</th>
                     <th>Source</th>
                     <th style="min-width:140px;">Status</th>
+                    <th>Webhook ID</th>
                     <th>FU</th>
                     <th style="min-width:150px;">Follow-Up 1</th>
                     <th style="min-width:150px;">Follow-Up 2</th>
@@ -64,7 +65,14 @@
                         {% if query.email != 'NA' %}<div style="color:#666;font-size:11px;">{{ query.email }}</div>{% endif %}
                         <div style="color:#555;font-size:11px;margin-top:2px;">{{ query.query_name }}</div>
                     </td>
-                    <td style="font-size:12px;color:#888;">{{ query.project.name if query.project else '<span style="color:#555;">—</span>' | safe }}</td>
+                    <td style="font-size:12px;color:#888;">
+                        {% if query.assigned_user %}
+                            <div style="color:#E5E5E5;font-weight:500;">{{ query.assigned_user.name }}</div>
+                            {% if query.project %}<div style="color:#666;font-size:11px;">{{ query.project.name }}</div>{% endif %}
+                        {% else %}
+                            <span style="color:#C9A84C;">Unassigned</span>
+                        {% endif %}
+                    </td>
                     <td>{% if query.source %}<span class="badge badge-gold">{{ query.source.name }}</span>{% else %}<span style="color:#555;">—</span>{% endif %}</td>
                     <td>
                         <form method="post" action="/admin/query/status/{{ query.id }}" class="status-form">
@@ -75,6 +83,13 @@
                                 {% endfor %}
                             </select>
                         </form>
+                    </td>
+                    <td style="font-size:12px;color:#666;">
+                        {% if query.webhook_id %}
+                            <a href="/admin/webhook-review/{{ query.webhook_id }}" target="_blank" style="color:#C9A84C;text-decoration:none;">#{{ query.webhook_id }}</a>
+                        {% else %}
+                            <span style="color:#555;">—</span>
+                        {% endif %}
                     </td>
                     <td style="text-align:center;">
                         {% if fus|length > 0 %}
@@ -99,6 +114,9 @@
                     <td>
                         <div style="display:flex;gap:4px;flex-wrap:wrap;">
                             <button onclick="openFuModal({{ query.id }}, '/admin')" class="btn-outline btn-sm" title="Add Follow-up">+FU</button>
+                            {% if query.webhook_id %}
+                            <button onclick="viewAllData({{ query.id }}, {{ query.webhook_id }})" class="btn-outline btn-sm" title="View All Data">View All</button>
+                            {% endif %}
                             <a href="/admin/query/edit/{{ query.id }}" class="btn-outline btn-sm">Edit</a>
                             <button onclick="confirmDelete({{ query.id }}, '{{ query.query_name | replace("'", "\\'") }}')" class="btn-danger btn-sm">Del</button>
                         </div>
@@ -106,7 +124,7 @@
                 </tr>
                 {% if fus|length > 2 %}
                 <tr id="fu-{{ query.id }}" class="fu-expand" style="display:none;">
-                    <td colspan="9" style="padding:0;">
+                    <td colspan="10" style="padding:0;">
                         {% for fu in fus[2:] %}
                         <div class="fu-item">
                             <span style="color:#C9A84C;">FU {{ loop.index + 2 }}:</span>
@@ -152,6 +170,19 @@
         </form>
     </div>
 </div>
+
+<!-- View All Data Modal -->
+<div id="viewAllDataModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:600px;">
+        <div class="modal-title">Complete Webhook Data</div>
+        <div id="viewAllDataContent" style="max-height:500px;overflow-y:auto;">
+            <!-- Content loaded via JavaScript -->
+        </div>
+        <div style="margin-top:1rem;display:flex;justify-content:flex-end;">
+            <button type="button" onclick="document.getElementById('viewAllDataModal').style.display='none'" class="btn-outline">Close</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block scripts %}
 <script>
@@ -164,6 +195,34 @@ function confirmDelete(id, name) {
     document.getElementById('deleteQueryMsg').textContent = 'Delete query "' + name + '"? All follow-ups will also be deleted.';
     document.getElementById('deleteQueryForm').action = '/admin/query/delete/' + id;
     document.getElementById('deleteQueryModal').style.display = 'flex';
+}
+function viewAllData(queryId, webhookId) {
+    fetch('/admin/webhook-review/' + webhookId)
+        .then(response => response.json())
+        .then(data => {
+            var content = '<div style="margin-bottom:1rem;">' +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid #2A2A2A;">' +
+                    '<div>' +
+                        '<strong>Query ID:</strong> ' + queryId + '<br>' +
+                        '<strong>Webhook ID:</strong> ' + data.id + '<br>' +
+                        '<strong>Source:</strong> ' + data.source + '<br>' +
+                        '<strong>Status:</strong> ' + (data.is_processed ? 'Processed' : 'Failed') +
+                    '</div>' +
+                    '<div>' +
+                        '<strong>Created:</strong> ' + new Date(data.created_at).toLocaleString() +
+                    '</div>' +
+                '</div>' +
+                (data.error_message ? '<div style="margin-bottom:1rem;"><strong>Error:</strong><br><pre style="color:#ef4444;background:#1a1a1a;padding:0.5rem;border-radius:4px;font-size:12px;">' + data.error_message + '</pre></div>' : '') +
+                '<div><strong>Complete JSON Data:</strong></div>' +
+                '<pre style="background:#1a1a1a;padding:1rem;border-radius:4px;font-size:12px;overflow-x:auto;white-space:pre-wrap;">' + JSON.stringify(JSON.parse(data.raw_data), null, 2) + '</pre>' +
+            '</div>';
+            document.getElementById('viewAllDataContent').innerHTML = content;
+            document.getElementById('viewAllDataModal').style.display = 'flex';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading webhook data');
+        });
 }
 document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });

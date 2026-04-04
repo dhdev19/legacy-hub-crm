@@ -23,7 +23,7 @@ templates = Jinja2Templates(directory="app/templates")
 # ── Dashboard / Queries ────────────────────────────────────────────────────────
 
 @router.get("/", response_class=HTMLResponse)
-def admin_dashboard(request: Request, page: int = 1, project_id: Optional[int] = None,
+def admin_dashboard(request: Request, page: int = 1, project_id: Optional[str] = None,
                     search: Optional[str] = None, db: Session = Depends(get_db),
                     current_user: User = Depends(require_admin)):
     per_page = 50
@@ -32,8 +32,13 @@ def admin_dashboard(request: Request, page: int = 1, project_id: Optional[int] =
         joinedload(Query.status), joinedload(Query.assigned_user),
         joinedload(Query.followups)
     )
-    if project_id:
-        q = q.filter(Query.project_id == project_id)
+    # Convert empty string to None and then to int if not empty
+    if project_id and project_id.strip():
+        try:
+            project_id_int = int(project_id)
+            q = q.filter(Query.project_id == project_id_int)
+        except ValueError:
+            pass  # Invalid integer, ignore filter
     if search:
         q = q.filter(Query.client_name.ilike(f"%{search}%") | Query.query_name.ilike(f"%{search}%"))
     total = q.count()
@@ -41,11 +46,13 @@ def admin_dashboard(request: Request, page: int = 1, project_id: Optional[int] =
     total_pages = (total + per_page - 1) // per_page
     projects = db.query(Project).filter(Project.is_deleted == 0).all()
     statuses = db.query(Status).filter(Status.is_deleted == 0).all()
+    # Convert project_id back to int for template if valid, otherwise None
+    selected_project = int(project_id) if project_id and project_id.strip() and project_id.isdigit() else None
     return templates.TemplateResponse("admin/dashboard.html", {
         "request": request, "user": current_user, "queries": queries,
         "page": page, "total_pages": total_pages, "total": total,
         "projects": projects, "statuses": statuses,
-        "selected_project": project_id, "search": search or ""
+        "selected_project": selected_project, "search": search or ""
     })
 
 # ── Sales Persons ──────────────────────────────────────────────────────────────

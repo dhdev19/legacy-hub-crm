@@ -9,11 +9,13 @@ from app.models.project import Project, ProjectSales
 from app.models.query import Query
 from app.models.followup import FollowUp
 from app.models.source_status import Source, Status
+from app.models.webhook import WebhookData
 from app.dependencies import require_admin
 from app.services.auth_service import hash_password
 from app.services.log_service import log_activity
 from app.services.project_service import generate_project_nanoid
 from app.services.query_service import get_min_query_sales_person
+from app.services.webhook_service import process_99acres_data, process_magicbricks_data
 from typing import Optional
 import json
 
@@ -341,3 +343,99 @@ def delete_status(status_id: int, db: Session = Depends(get_db), current_user: U
         s.is_deleted = 1
         db.commit()
     return RedirectResponse("/admin/statuses", status_code=302)
+
+# ── Webhook Review ─────────────────────────────────────────────────────────────
+
+@router.get("/webhook-review", response_class=HTMLResponse)
+def webhook_review(request: Request, page: int = 1, source: Optional[str] = None, 
+                 status: Optional[str] = None, date_from: Optional[str] = None, 
+                 date_to: Optional[str] = None, db: Session = Depends(get_db), 
+                 current_user: User = Depends(require_admin)):
+    per_page = 50
+    q = db.query(WebhookData)
+    
+    # Apply filters - default to failed only if no status specified
+    if status == "processed":
+        q = q.filter(WebhookData.is_processed == True)
+    elif status == "failed":
+        q = q.filter(WebhookData.is_processed == False)
+    else:
+        # Default: show only failed/unprocessed leads
+        q = q.filter(WebhookData.is_processed == False)
+    
+    if source:
+        q = q.filter(WebhookData.source == source)
+    if date_from:
+        q = q.filter(WebhookData.created_at >= date_from)
+    if date_to:
+        q = q.filter(WebhookData.created_at <= date_to + " 23:59:59")
+    
+    total = q.count()
+    webhook_data = q.order_by(WebhookData.created_at.desc()).offset((page-1)*per_page).limit(per_page).all()
+    total_pages = (total + per_page - 1) // per_page
+    
+    return templates.TemplateResponse("admin/webhook_review.html", {
+        "request": request, "user": current_user, "webhook_data": webhook_data,
+        "page": page, "total_pages": total_pages, "total": total,
+        "source": source, "status": status, "date_from": date_from, "date_to": date_to
+    })
+
+@router.get("/webhook-review/{webhook_id}")
+def get_webhook_details(webhook_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    webhook = db.query(WebhookData).filter(WebhookData.id == webhook_id).first()
+    if not webhook:
+        raise HTTPException(status_code=404, detail="Webhook data not found")
+    
+    return JSONResponse({
+        "id": webhook.id,
+        "source": webhook.source,
+        "is_processed": webhook.is_processed,
+        "raw_data": webhook.raw_data,
+        "error_message": webhook.error_message,
+        "created_at": webhook.created_at.isoformat() if webhook.created_at else None
+    })
+
+@router.post("/webhook-review/{webhook_id}/reprocess")
+def reprocess_webhook(webhook_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    webhook = db.query(WebhookData).filter(WebhookData.id == webhook_id).first()
+    if not webhook:
+        raise HTTPException(status_code=404, detail="Webhook data not found")
+    
+    if webhook.is_processed:
+        return JSONResponse({"success": False, "message": "Data already processed"})
+    
+    try:
+        # Parse the raw JSON data
+        data = json.loads(webhook.raw_data)
+        
+        # Reprocess based on source
+        if webhook.source == "99acres":
+            success, message = process_99acres_data(data, db)
+        elif webhook.source == "magicbricks":
+            success, message = process_magicbricks_data(data, db)
+        else:
+            return JSONResponse({"success": False, "message": "Unknown source"})
+        
+        if success:
+            # Update webhook record
+            webhook.is_processed = True
+            webhook.error_message = None
+            db.commit()
+            
+            log_activity(db, current_user.id, current_user.name, current_user.role, 
+                        "reprocessed_webhook", "webhook", webhook_id, 
+                        f"Reprocessed webhook from {webhook.source}")
+            
+            return JSONResponse({"success": True, "message": "Data reprocessed successfully"})
+        else:
+            # Update error message
+            webhook.error_message = message
+            db.commit()
+            
+            return JSONResponse({"success": False, "message": message})
+            
+    except Exception as e:
+        webhook.error_message = f"Reprocessing error: {str(e)}"
+        db.commit()
+        
+        return JSONResponse({"success": False, "message": f"Reprocessing error: {str(e)}"})

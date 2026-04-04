@@ -1,0 +1,213 @@
+{
+  "info": {
+    "name": "CRM Webhook API Tests",
+    "description": "Postman collection for testing 99acres and MagicBricks webhook endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "99acres - Valid Lead",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "API-Key",
+            "value": "{{ACRES_API}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Himanshu Kumar\",\n  \"state\": \"Rajasthan\",\n  \"city\": \"Jaipur\",\n  \"location\": \"GK Colony\",\n  \"budget\": \"5403192\",\n  \"notes\": \"Test lead from 99acres\",\n  \"email\": \"himanshu@example.com\",\n  \"countryCode\": \"91\",\n  \"mobile\": \"9988776655\",\n  \"project\": \"Aamor\",\n  \"property\": \"Villa\",\n  \"leadExpectedBudget\": \"6000000\",\n  \"propertyType\": \"Flat\",\n  \"propertySubType\": \"Plot\",\n  \"submittedDate\": \"28-03-18\",\n  \"submittedTime\": \"22:22:32\",\n  \"subsource\": \"\",\n  \"leadStatus\": \"Schedule Site Visit\",\n  \"callRecordingUrl\": \"\",\n  \"leadScheduledDate\": \"28-03-18\",\n  \"leadScheduleTime\": \"22:22:32\",\n  \"bhkType\": \"Simplex\",\n  \"leadBookedDate\": \"28-03-18\",\n  \"leadBookedTime\": \"22:22:32\",\n  \"additionalProperties\": {\n    \"EnquiredFor\": \"Buy\",\n    \"BHKType\": \"Simplex\",\n    \"NoOfBHK\": \"3\"\n  },\n  \"primaryUser\": \"Rahul N\",\n  \"secondaryUser\": \"Ranjan Gupta\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/webhook/99acres",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["webhook", "99acres"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "99acres - Missing Required Field",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "API-Key",
+            "value": "{{ACRES_API}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"state\": \"Rajasthan\",\n  \"city\": \"Jaipur\",\n  \"email\": \"test@example.com\",\n  \"countryCode\": \"91\",\n  \"mobile\": \"9988776655\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/webhook/99acres",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["webhook", "99acres"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "99acres - Invalid API Key",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "API-Key",
+            "value": "invalid_key"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"mobile\": \"9876543210\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/webhook/99acres",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["webhook", "99acres"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "MagicBricks - Valid Lead",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "API-Key",
+            "value": "{{MAGIC_API}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"state\": \"Maharashtra\",\n  \"city\": \"Mumbai\",\n  \"location\": \"Bandra West\",\n  \"budget\": \"7500000\",\n  \"notes\": \"Test lead from MagicBricks\",\n  \"email\": \"priya@example.com\",\n  \"countryCode\": \"91\",\n  \"mobile\": \"9876543210\",\n  \"project\": \"Skyline Towers\",\n  \"property\": \"Apartment\",\n  \"leadExpectedBudget\": \"8000000\",\n  \"propertyType\": \"Flat\",\n  \"propertySubType\": \"2BHK\",\n  \"submittedDate\": \"29-03-18\",\n  \"submittedTime\": \"15:30:45\",\n  \"subsource\": \"Website\",\n  \"leadStatus\": \"Interested\",\n  \"callRecordingUrl\": \"\",\n  \"leadScheduledDate\": \"30-03-18\",\n  \"leadScheduleTime\": \"11:00:00\",\n  \"bhkType\": \"Simplex\",\n  \"leadBookedDate\": \"\",\n  \"leadBookedTime\": \"\",\n  \"additionalProperties\": {\n    \"EnquiredFor\": \"Buy\",\n    \"BHKType\": \"Simplex\",\n    \"NoOfBHK\": \"2\",\n    \"PreferredFloor\": \"Mid\"\n  },\n  \"primaryUser\": \"Amit Kumar\",\n  \"secondaryUser\": \"Sneha Patel\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/webhook/magicbricks",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["webhook", "magicbricks"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "MagicBricks - Missing Mobile",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "API-Key",
+            "value": "{{MAGIC_API}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"city\": \"Delhi\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/webhook/magicbricks",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["webhook", "magicbricks"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "MagicBricks - Invalid API Key",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "API-Key",
+            "value": "wrong_magic_key"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"mobile\": \"9876543210\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/webhook/magicbricks",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["webhook", "magicbricks"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "ACRES_API",
+      "value": "your_99acres_api_key_here",
+      "type": "string"
+    },
+    {
+      "key": "MAGIC_API",
+      "value": "your_magicbricks_api_key_here",
+      "type": "string"
+    }
+  ]
+}
